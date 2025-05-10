@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -28,10 +28,14 @@ import { CopyToClipboard } from "react-copy-to-clipboard";
 import { Copy } from "lucide-react";
 import { toast } from "sonner"; // or your preferred toast lib
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Input } from "@/components/ui/input";
 
 export default function Home() {
   const [projectDescription, setProjectDescription] = useState("");
+  const [repoUrl, setRepoUrl] = useState("")
   const [generatedReadme, setGeneratedReadme] = useState("");
+  console.log('generatedReadme',generatedReadme);
+  
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("input");
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +88,7 @@ export default function Home() {
         body: JSON.stringify({
           input: projectDescription,
           useGemini: !useFallback,
+          repoUrl:repoUrl
         }),
       });
 
@@ -271,6 +276,9 @@ export default function Home() {
                 value={projectDescription}
                 onChange={(e) => setProjectDescription(e.target.value)}
               />
+
+              <h4 >Enter Github URL</h4>
+              <Input value={repoUrl}  onChange={(e) => setRepoUrl(e.target.value)}/>
 
               {/* Warning & Error Blocks */}
               {warning && (

@@ -1,3 +1,4 @@
+import { getGitHubRepoContext, parseGitHubUrl } from "@/lib/utils";
 import { NextResponse } from "next/server";
 
 const generateFallbackReadme = (projectDescription: string) => {
@@ -118,6 +119,42 @@ MIT License
 `;
 };
 
+
+const cleanMarkdownResponse = (content:any) => {
+  // First, check if we have a markdown code block wrapper
+  const markdownBlockRegex = /^```(?:markdown|md)?\s*\n([\s\S]*?)```\s*$/;
+  const match = content.match(markdownBlockRegex);
+  
+  if (match && match[1]) {
+    // Return just the content inside the code block
+    return match[1];
+  }
+  
+  return content;
+};
+
+const trimMarkdownWrapper = (content: any) => {
+  // Check if the content starts with ```markdown and ends with ```
+  let trimmedContent = content.trim();
+  
+  // Check if the content is wrapped in a markdown code block
+  if (
+    (trimmedContent.startsWith('```markdown') || trimmedContent.startsWith('```md')) && 
+    trimmedContent.endsWith('```')
+  ) {
+    // Find the first line break after the opening backticks
+    const firstLineBreakIndex = trimmedContent.indexOf('\n');
+    if (firstLineBreakIndex !== -1) {
+      // Remove the first line (```markdown) and the last line (```)
+      trimmedContent = trimmedContent
+        .substring(firstLineBreakIndex + 1, trimmedContent.length - 3)
+        .trim();
+    }
+  }
+
+  return trimmedContent;
+};
+
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => null);
@@ -131,7 +168,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { input, useGemini = true } = body;
+    const { input, useGemini = true, repoUrl } = body;
 
     if (!useGemini) {
       const fallbackReadme = generateFallbackReadme(input);
@@ -150,21 +187,49 @@ export async function POST(request: Request) {
     }
 
     const systemPrompt = `
-Create a comprehensive, well-structured README.md file based on the project description provided.
+    You are an expert technical writer. Based on the provided project description and GitHub repository context (including README content, package.json data, and repo metadata), generate a professional and comprehensive README.md file.
+    
+    ### Your README should follow this structure:
+    1. # Project Title (derive from repo name or user input)
+    2. ## Description (summarize key purpose and functionality)
+    3. ## Features (list major features based on the content)
+    4. ## Technologies Used (detect from dependencies, scripts, or text)
+    5. ## Installation (include correct commands based on tech stack)
+    6. ## Usage (brief steps or code to use the project)
+    7. ## License (default to MIT unless stated otherwise)
+    
+    ### Guidelines:
+    - Use Markdown formatting with headings, code blocks, and lists.
+    - Keep it concise, clear, and developer-friendly.
+    - If package.json or README.md is available, extract relevant info.
+    - If both GitHub and user input are available, merge both sources wisely.
+    
+    Only return the README content in Markdown format.
+    `;
 
-Follow these guidelines:
-1. Use proper Markdown formatting with appropriate headings, lists, and code blocks.
-2. Include:
-   - # Project Title (derive from the project description)
-   - ## Description (based on the provided project description)
-   - ## Features (list the main features of the project)
-   - ## Technologies Used (list technologies mentioned in the description)
-   - ## Installation (provide appropriate installation steps)
-   - ## Usage (provide usage instructions)
-   - ## License (include MIT License by default)
-3. Keep the content professional, concise, and well-organized.
-4. Output only the README content in Markdown format.
-`;
+    let description = input || "";
+
+    if (repoUrl) {
+      const parsed = parseGitHubUrl(repoUrl);
+      if (!parsed) {
+        return NextResponse.json(
+          { error: "Invalid GitHub repo URL." },
+          { status: 400 }
+        );
+      }
+
+      const context = await getGitHubRepoContext(parsed.owner, parsed.repo);
+      description = `
+Project Name: ${context.name}
+${context.description ? `Description: ${context.description}` : ""}
+Dependencies: ${Object.keys(context.dependencies).join(", ")}
+Scripts: ${Object.keys(context.scripts).join(", ")}
+
+README Snippet:
+${context.readme.substring(0, 800)}
+${input ? `\n\nAdditional user-provided description:\n${input}` : ""}
+  `;
+    }
 
     // Try first with v1 (most current stable API)
     let geminiResponse = await fetch(
@@ -175,7 +240,7 @@ Follow these guidelines:
         body: JSON.stringify({
           contents: [
             { role: "user", parts: [{ text: systemPrompt }] },
-            { role: "user", parts: [{ text: input }] },
+            { role: "user", parts: [{ text: description }] },
           ],
           generationConfig: {
             temperature: 0.7,
@@ -196,7 +261,7 @@ Follow these guidelines:
           body: JSON.stringify({
             contents: [
               { role: "user", parts: [{ text: systemPrompt }] },
-              { role: "user", parts: [{ text: input }] },
+              { role: "user", parts: [{ text: description }] },
             ],
             generationConfig: {
               temperature: 0.7,
@@ -208,7 +273,7 @@ Follow these guidelines:
     }
 
     const geminiData = await geminiResponse.json();
-    console.log("gemini data", geminiData.candidates[0].content);
+    // console.log("gemini data", geminiData.candidates[0].content);
 
     // Handle potential error cases
     if (geminiData.error) {
@@ -238,9 +303,8 @@ Follow these guidelines:
     }
 
     if (geminiData.candidates && geminiData.candidates.length > 0) {
-      const readme = geminiData.candidates[0].content?.parts?.[0]?.text || "";
-      console.log('readme', readme);
-      
+      let readme = geminiData.candidates[0].content?.parts?.[0]?.text || "";
+      console.log("readme", readme);
 
       if (!readme.trim()) {
         const fallbackReadme = generateFallbackReadme(input);
@@ -250,6 +314,8 @@ Follow these guidelines:
           warning: "Gemini returned empty content.",
         });
       }
+
+      
 
       return NextResponse.json({ readme, source: "gemini" });
     } else {
