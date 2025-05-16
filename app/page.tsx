@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FaGithub } from "react-icons/fa";
 import {
   Loader2,
   Download,
@@ -32,10 +33,10 @@ import { Input } from "@/components/ui/input";
 
 export default function Home() {
   const [projectDescription, setProjectDescription] = useState("");
-  const [repoUrl, setRepoUrl] = useState("")
+  const [repoUrl, setRepoUrl] = useState("");
   const [generatedReadme, setGeneratedReadme] = useState("");
-  console.log('generatedReadme',generatedReadme);
-  
+  console.log("generatedReadme", generatedReadme);
+
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("input");
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +89,7 @@ export default function Home() {
         body: JSON.stringify({
           input: projectDescription,
           useGemini: !useFallback,
-          repoUrl:repoUrl
+          repoUrl: repoUrl,
         }),
       });
 
@@ -226,7 +227,7 @@ export default function Home() {
           <FileText size={24} />
         </div>
         <h1 className="text-5xl font-extrabold tracking-tight mb-3 leading-tight">
-        ReadCraft
+          ReadCraft
         </h1>
         <p className="text-muted-foreground max-w-2xl text-lg">
           Transform your raw project description into a polished, professional{" "}
@@ -277,8 +278,11 @@ export default function Home() {
                 onChange={(e) => setProjectDescription(e.target.value)}
               />
 
-              <h4 >Enter Github URL</h4>
-              <Input value={repoUrl}  onChange={(e) => setRepoUrl(e.target.value)}/>
+              <h4>Enter Github URL</h4>
+              <Input
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+              />
 
               {/* Warning & Error Blocks */}
               {warning && (
@@ -458,7 +462,6 @@ export default function Home() {
     </main>
   );
 }
-
 const features = [
   {
     title: "Gemini-Powered Generation",
@@ -469,13 +472,13 @@ const features = [
   {
     title: "Markdown Preview",
     description:
-      "See exactly how your README will look with our built-in markdown previewer.",
+      "See exactly how your README will look with our built-in markdown previewer, along with downloading your generated README.md file with a single click",
     icon: <FileText className="h-5 w-5 text-blue-600" />,
   },
   {
-    title: "One-Click Download",
+    title: "GitHub Context",
     description:
-      "Download your generated README.md file with a single click, ready to add to your project.",
-    icon: <Download className="h-5 w-5 text-blue-600" />,
+      "Enter your GitHub repo to improve the context for generating the README",
+    icon: <FaGithub className="h-5 w-5 text-blue-600" />,
   },
 ];
