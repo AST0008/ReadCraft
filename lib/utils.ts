@@ -51,3 +51,18 @@ export async function getGitHubRepoContext(owner: string, repo: string) {
     scripts: pkg.scripts || {},
   };
 }
+
+export async function fetchCommitHistory(owner: string, repo: string) {
+  const { data } = await octokit.repos.listCommits({
+    owner,
+    repo,
+    per_page: 5,
+  });
+
+  return data.map((commit) => ({
+    message: commit.commit.message,
+    date: commit.commit.author?.date,
+    author: commit.commit.author?.name,
+    sha: commit.sha,
+  }));
+}
