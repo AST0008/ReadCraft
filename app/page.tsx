@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FaGithub } from "react-icons/fa";
 import {
   Loader2,
@@ -54,6 +53,11 @@ import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { fetchCommitHistory } from "@/lib/utils";
 import { motion } from "framer-motion";
 import PrismTheme from "react-syntax-highlighter";
+import Feature from "@/components/feature";
+import CTA from "@/components/cta";
+import Footer from "@/components/footer";
+import Header from "@/components/header";
+import Hero from "@/components/hero";
 
 type Commit = {
   message: string;
@@ -79,6 +83,9 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("input");
   const [error, setError] = useState<string | null>(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedReadme, setEditedReadme] = useState("");
 
   const [warning, setWarning] = useState<string | null>(null);
   const [errorType, setErrorType] = useState(null);
@@ -289,79 +296,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-      {/* Enhanced Sticky Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between py-4 px-6">
-          <div className="flex items-center space-x-3">
-            <FileText className="text-blue-600 dark:text-blue-400 w-8 h-8 transition-transform hover:scale-110" />
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-              ReadCraft
-            </h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <a
-              href="#features"
-              className="hidden md:block text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              Features
-            </a>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section with Improved Visual Hierarchy */}
-      <section className="relative flex flex-col items-center justify-center h-[80vh] bg-gradient-to-br from-blue-600 to-green-600 overflow-hidden">
-        {/* Animated background elements */}
-        <div className="absolute inset-0 opacity-10">
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full bg-white"
-              style={{
-                width: `${Math.random() * 10 + 5}px`,
-                height: `${Math.random() * 10 + 5}px`,
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                animation: `float ${Math.random() * 10 + 10}s linear infinite`,
-                animationDelay: `${Math.random() * 5}s`,
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="text-center px-4 z-10">
-          <div className="relative inline-block mb-6">
-            <FileText className="mx-auto w-16 h-16 text-white" />
-            <div className="absolute -inset-4 bg-white/20 rounded-full animate-ping opacity-75"></div>
-          </div>
-          <h2 className="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">
-              AI-Powered README Generator
-            </span>
-          </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Transform your project description into a professional{" "}
-            <span className="font-semibold">README.md</span> in seconds, powered
-            by Google's Gemini AI.
-          </p>
-          <Button
-            onClick={() =>
-              document
-                .getElementById("generator")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-            className="bg-white text-blue-600 hover:bg-gray-50 font-semibold rounded-full px-8 py-4 shadow-lg transition-all hover:shadow-xl hover:scale-105 active:scale-95"
-          >
-            Get Started Now →
-          </Button>
-        </div>
-
-        {/* Animated scroll indicator */}
-        <div className="absolute bottom-8 animate-bounce-slow">
-          <ChevronDown className="w-8 h-8 text-white/80" />
-        </div>
-      </section>
+      <Header />
+      <Hero />
 
       {/* Generator Section with Improved Layout */}
       <section id="generator" className="relative py-16 px-4 sm:px-6 lg:px-8">
@@ -528,6 +464,19 @@ export default function Home() {
                     <Eye className="w-5 h-5 mr-2 text-blue-500" />
                     Preview
                   </h3>
+
+                  {/* <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => {
+                      setIsEditing((prev) => !prev);
+                      setEditedReadme(generatedReadme);
+                    }}
+                  >
+                    {isEditing ? "Preview" : "Edit"}
+                  </Button> */}
+
                   {generatedReadme && (
                     <div className="flex space-x-2">
                       <Button
@@ -607,67 +556,75 @@ export default function Home() {
 
                     {/* Markdown Render */}
                     <div className="flex-1 overflow-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 prose dark:prose-invert prose-sm sm:prose-base max-w-none">
-                      <ReactMarkdown
-                        components={{
-                          code({
-                            node,
-                            inline,
-                            className,
-                            children,
-                            ...props
-                          }: any) {
-                            const match = /language-(\w+)/.exec(
-                              className || ""
-                            );
-                            return !inline && match ? (
-                              <SyntaxHighlighter
-                                style={oneDark as any}
-                                language={match[1]}
-                                PreTag="div"
-                                className="rounded-lg mb-4 text-sm"
+                      {isEditing ? (
+                        <Textarea
+                          value={editedReadme}
+                          onChange={(e) => setEditedReadme(e.target.value)}
+                          className="w-full min-h-[400px] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-4 font-mono text-sm"
+                        />
+                      ) : (
+                        <ReactMarkdown
+                          components={{
+                            code({
+                              node,
+                              inline,
+                              className,
+                              children,
+                              ...props
+                            }: any) {
+                              const match = /language-(\w+)/.exec(
+                                className || ""
+                              );
+                              return !inline && match ? (
+                                <SyntaxHighlighter
+                                  style={oneDark as any}
+                                  language={match[1]}
+                                  PreTag="div"
+                                  className="rounded-lg mb-4 text-sm"
+                                  {...props}
+                                >
+                                  {String(children).replace(/\n$/, "")}
+                                </SyntaxHighlighter>
+                              ) : (
+                                <code
+                                  className={`${
+                                    className ?? ""
+                                  } bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-md text-sm`}
+                                  {...props}
+                                >
+                                  {children}
+                                </code>
+                              );
+                            },
+                            h1: ({ node, ...props }) => (
+                              <h1
+                                className="text-2xl font-bold mt-6 mb-4 border-b pb-2"
                                 {...props}
-                              >
-                                {String(children).replace(/\n$/, "")}
-                              </SyntaxHighlighter>
-                            ) : (
-                              <code
-                                className={`${
-                                  className ?? ""
-                                } bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-md text-sm`}
+                              />
+                            ),
+                            h2: ({ node, ...props }) => (
+                              <h2
+                                className="text-xl font-semibold mt-5 mb-3 border-b pb-1"
                                 {...props}
-                              >
-                                {children}
-                              </code>
-                            );
-                          },
-                          h1: ({ node, ...props }) => (
-                            <h1
-                              className="text-2xl font-bold mt-6 mb-4 border-b pb-2"
-                              {...props}
-                            />
-                          ),
-                          h2: ({ node, ...props }) => (
-                            <h2
-                              className="text-xl font-semibold mt-5 mb-3 border-b pb-1"
-                              {...props}
-                            />
-                          ),
-                          a: ({ node, ...props }) => (
-                            <a
-                              className="text-blue-600 dark:text-blue-400 hover:underline"
-                              {...props}
-                            />
-                          ),
-                          blockquote: ({ node, ...props }) => (
-                            <blockquote
-                              className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-400"
-                              {...props}
-                            />
-                          ),
-                        }}
-                      >
-                        {generatedReadme}
-                      </ReactMarkdown>
+                              />
+                            ),
+                            a: ({ node, ...props }) => (
+                              <a
+                                className="text-blue-600 dark:text-blue-400 hover:underline"
+                                {...props}
+                              />
+                            ),
+                            blockquote: ({ node, ...props }) => (
+                              <blockquote
+                                className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-400"
+                                {...props}
+                              />
+                            ),
+                          }}
+                        >
+                          {editedReadme || generatedReadme}
+                        </ReactMarkdown>
+                      )}
                     </div>
 
                     {/* Recent Commits */}
@@ -704,208 +661,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section with Improved Card Design */}
-      <section id="features" className="py-16 bg-white dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Why Choose ReadCraft?
-            </h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-green-500 mx-auto mb-6"></div>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-              The most comprehensive README generator with AI-powered features
-              to make your project shine.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, idx) => (
-              <div
-                key={idx}
-                className="group relative overflow-hidden rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative p-8 h-full flex flex-col">
-                  <div className="bg-gradient-to-r from-blue-500 to-green-500 p-3 rounded-xl w-12 h-12 flex items-center justify-center mb-6 text-white">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6 flex-grow">
-                    {feature.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      {/* <section className="py-16 bg-gray-50 dark:bg-gray-800/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Loved by Developers
-            </h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-green-500 mx-auto mb-6"></div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, idx) => (
-              <Card
-                key={idx}
-                className="border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center mb-4">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mr-3">
-                      <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium">{testimonial.name}</h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {testimonial.role}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-300 italic">
-                    "{testimonial.quote}"
-                  </p>
-                  <div className="flex mt-4 space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${
-                          i < testimonial.rating
-                            ? "text-yellow-500 fill-yellow-500"
-                            : "text-gray-300 dark:text-gray-600"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section> */}
-
-      {/* Final CTA with Gradient Background */}
-      <section className="py-20 bg-gradient-to-br from-green-600 to-blue-600 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4yIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIgMS44LTQgNC00czQgMS44IDQgNC0xLjggNC00IDQtNC0xLjgtNC00eiIvPjwvZz48L2c+PC9zdmc+')]"></div>
-        </div>
-
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-6">
-            Ready to Elevate Your Documentation?
-          </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Join thousands of developers who save hours on documentation with
-            ReadCraft.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button
-              onClick={() =>
-                document
-                  .getElementById("generator")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="bg-white text-green-600 hover:bg-gray-50 font-semibold rounded-full px-8 py-4 shadow-lg transition-all hover:shadow-xl hover:scale-[1.02] active:scale-95"
-            >
-              Generate Your README Now
-            </Button>
-            {/* <Button
-              variant="outline"
-              className="bg-transparent border-white text-white hover:bg-white/10 font-semibold rounded-full px-8 py-4 shadow-lg transition-all hover:shadow-xl hover:scale-[1.02] active:scale-95"
-            >
-              Learn More
-            </Button> */}
-          </div>
-        </div>
-      </section>
-
-      {/* Enhanced Footer */}
-      <footer className="bg-gray-100 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-700 py-12">
-        <div className="max-w-4xl mx-auto  px-4  sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div>
-              <div className="flex items-centermb-4">
-                <FileText className="text-blue-600 dark:text-blue-400 w-6 h-6" />
-                <h3 className="text-lg font-bold ml-2">ReadCraft</h3>
-              </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                AI-powered README generator for developers who value their time
-                and project quality.
-              </p>
-            </div>
-
-            {/* <div>
-              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-4">
-                Product
-              </h4>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="#"
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
-                  >
-                    Features
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
-                  >
-                    Pricing
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
-                  >
-                    API
-                  </a>
-                </li>
-              </ul>
-            </div> */}
-
-            <div>
-              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-4">
-                Connect
-              </h4>
-              <div className="flex space-x-4">
-                {/* <a
-                  href="#"
-                  className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
-                >
-                  <Twitter className="w-5 h-5" />
-                </a> */}
-                <a
-                  href="https://github.com/AST0008"
-                  className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
-                >
-                  <Github className="w-5 h-5" />
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/ashwajit-tayade-868709296/"
-                  className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
-                >
-                  <Linkedin className="w-5 h-5" />
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-8 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500 dark:text-gray-400">
-            © {new Date().getFullYear()} ReadCraft. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Feature />
+      <CTA />
+      <Footer />
 
       {/* Floating Action Button */}
       <button
@@ -918,61 +676,3 @@ export default function Home() {
     </div>
   );
 }
-const features = [
-  {
-    title: "Gemini-Powered Generation",
-    description:
-      "Leverages Google's advanced Gemini AI model to create comprehensive, well-structured README files.",
-    icon: <Sparkles className="h-5 w-5 text-blue-600" />,
-  },
-  {
-    title: "Markdown Preview",
-    description:
-      "See exactly how your README will look with our built-in markdown previewer, along with downloading your generated README.md file with a single click",
-    icon: <FileText className="h-5 w-5 text-blue-600" />,
-  },
-  {
-    title: "GitHub Context",
-    description:
-      "Enter your GitHub repo to improve the context for generating the README",
-    icon: <FaGithub className="h-5 w-5 text-blue-600" />,
-  },
-];
-
-// {/* Testimonials Section */}
-// <section className="py-16 bg-gray-50 dark:bg-gray-800/50">
-//   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//     <div className="text-center mb-12">
-//       <h2 className="text-3xl md:text-4xl font-bold mb-4">
-//         Loved by Developers
-//       </h2>
-//       <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-green-500 mx-auto mb-6"></div>
-//     </div>
-
-//     {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-//   {testimonials.map((testimonial, idx) => (
-//     <Card key={idx} className="border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition">
-//       <CardContent className="p-6">
-//         <div className="flex items-center mb-4">
-//           <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mr-3">
-//             <User className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-//           </div>
-//           <div>
-//             <h4 className="font-medium">{testimonial.name}</h4>
-//             <p className="text-sm text-gray-500 dark:text-gray-400">{testimonial.role}</p>
-//           </div>
-//         </div>
-//         <p className="text-gray-600 dark:text-gray-300 italic">
-//           "{testimonial.quote}"
-//         </p>
-//         <div className="flex mt-4 space-x-1">
-//           {[...Array(5)].map((_, i) => (
-//             <Star key={i} className={`w-4 h-4 ${i < testimonial.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300 dark:text-gray-600'}`} />
-//           ))}
-//         </div>
-//       </CardContent>
-//     </Card>
-//   ))}
-// </div> */}
-//   </div>
-// </section>
