@@ -16,9 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>
-          AI README Generator – Instant Professional Project READMEs
-        </title>
+        <title>ReadCraft - AI README Generator</title>
         <meta
           name="description"
           content="Generate high-quality, AI-powered README.md files for your GitHub projects. No coding needed."
