@@ -1,5 +1,8 @@
+"use client";
+
 import { ChevronDown, FileText } from "lucide-react";
 import { Button } from "./ui/button";
+import Link from "next/link";
 
 const Hero = () => {
   return (
@@ -38,16 +41,13 @@ const Hero = () => {
             <span className="font-semibold">README.md</span> in seconds, powered
             by Google's Gemini AI.
           </p>
-          <Button
-            onClick={() =>
-              document
-                .getElementById("generator")
-                ?.scrollIntoView({ behavior: "smooth" })
-            }
-            className="bg-white text-blue-600 hover:bg-gray-50 font-semibold rounded-full px-8 py-4 shadow-lg transition-all hover:shadow-xl hover:scale-105 active:scale-95"
-          >
-            Get Started Now →
-          </Button>
+          <Link href="/login">
+            <Button
+              className="bg-white text-blue-600 hover:bg-gray-50 font-semibold rounded-full px-8 py-4 shadow-lg transition-all hover:shadow-xl hover:scale-105 active:scale-95"
+            >
+              Get Started Now →
+            </Button>
+          </Link>
         </div>
 
         {/* Animated scroll indicator */}

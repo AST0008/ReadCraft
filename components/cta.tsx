@@ -1,4 +1,5 @@
 import { Button } from "./ui/button";
+import Link from "next/link";
 
 const CTA = () => {
   return (
@@ -17,16 +18,13 @@ const CTA = () => {
             ReadCraft.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button
-              onClick={() =>
-                document
-                  .getElementById("generator")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="bg-white text-green-600 hover:bg-gray-50 font-semibold rounded-full px-8 py-4 shadow-lg transition-all hover:shadow-xl hover:scale-[1.02] active:scale-95"
-            >
-              Generate Your README Now
-            </Button>
+            <Link href="/login">
+              <Button
+                className="bg-white text-green-600 hover:bg-gray-50 font-semibold rounded-full px-8 py-4 shadow-lg transition-all hover:shadow-xl hover:scale-[1.02] active:scale-95"
+              >
+                Generate Your README Now
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

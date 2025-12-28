@@ -1,5 +1,6 @@
 import { getGitHubRepoContext, parseGitHubUrl } from "@/lib/utils";
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 const generateFallbackReadme = (projectDescription: string) => {
   let title = "Project Title";
@@ -155,11 +156,21 @@ const trimMarkdownWrapper = (content: any) => {
   return trimmedContent;
 };
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json().catch(() => null);
+export async function POST(req: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    if (!body || !body.input || typeof body.input !== "string") {
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json().catch(() => null);
+    const { description, repoUrl, useGemini = true } = body || {};
+
+    if (!description || typeof description !== "string") {
       return NextResponse.json(
         {
           error: "Invalid request body. Please provide a project description.",
@@ -168,7 +179,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { input, useGemini = true, repoUrl } = body;
+    const input = description.trim();
 
     if (!useGemini) {
       const fallbackReadme = generateFallbackReadme(input);
@@ -207,7 +218,7 @@ export async function POST(request: Request) {
     Only return the README content in Markdown format.
     `;
 
-    let description = input || "";
+    let finalDescription = input || "";
 
     if (repoUrl) {
       const parsed = parseGitHubUrl(repoUrl);
@@ -219,7 +230,7 @@ export async function POST(request: Request) {
       }
 
       const context = await getGitHubRepoContext(parsed.owner, parsed.repo);
-      description = `
+      finalDescription = `
 Project Name: ${context.name}
 ${context.description ? `Description: ${context.description}` : ""}
 Dependencies: ${Object.keys(context.dependencies).join(", ")}
@@ -240,7 +251,7 @@ ${input ? `\n\nAdditional user-provided description:\n${input}` : ""}
         body: JSON.stringify({
           contents: [
             { role: "user", parts: [{ text: systemPrompt }] },
-            { role: "user", parts: [{ text: description }] },
+            { role: "user", parts: [{ text: finalDescription }] },
           ],
           generationConfig: {
             temperature: 0.7,
@@ -261,7 +272,7 @@ ${input ? `\n\nAdditional user-provided description:\n${input}` : ""}
           body: JSON.stringify({
             contents: [
               { role: "user", parts: [{ text: systemPrompt }] },
-              { role: "user", parts: [{ text: description }] },
+              { role: "user", parts: [{ text: finalDescription }] },
             ],
             generationConfig: {
               temperature: 0.7,
