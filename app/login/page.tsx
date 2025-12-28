@@ -16,12 +16,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  
+  // Lazy initialization of Supabase client to avoid issues during build
+  const getSupabaseClient = () => createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     
+    const supabase = getSupabaseClient()
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -41,6 +44,7 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     
+    const supabase = getSupabaseClient()
     const { error } = await supabase.auth.signUp({
       email,
       password,

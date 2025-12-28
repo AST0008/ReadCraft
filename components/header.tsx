@@ -19,10 +19,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Header = () => {
   const [user, setUser] = useState<any>(null);
-  const supabase = createClient();
   const router = useRouter();
 
+  // Lazy initialization of Supabase client to avoid issues during build
+  const getSupabaseClient = () => createClient();
+
   useEffect(() => {
+    const supabase = getSupabaseClient();
     const getUser = async () => {
       const {
         data: { user },
@@ -41,6 +44,7 @@ const Header = () => {
   }, []);
 
   const handleLogout = async () => {
+    const supabase = getSupabaseClient();
     await supabase.auth.signOut();
     router.push("/");
     router.refresh();

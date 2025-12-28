@@ -7,10 +7,16 @@ export async function GET(request: Request) {
   const next = searchParams.get('next') ?? '/dashboard'
 
   if (code) {
-    const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+    try {
+      const supabase = await createClient()
+      const { error } = await supabase.auth.exchangeCodeForSession(code)
+      if (!error) {
+        return NextResponse.redirect(`${origin}${next}`)
+      }
+    } catch (error) {
+      console.error('Auth callback error:', error)
+      // return the user to an error page with instructions
+      return NextResponse.redirect(`${origin}/auth/auth-code-error`)
     }
   }
 
