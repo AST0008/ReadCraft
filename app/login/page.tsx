@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,6 +16,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  
+  useEffect(() => {
+    const error = searchParams.get('error')
+    const error_description = searchParams.get('error_description')
+    if (error && error_description) {
+      toast.error(error_description)
+    }
+  }, [searchParams])
   
   // Lazy initialization of Supabase client to avoid issues during build
   const getSupabaseClient = () => createClient()
@@ -45,11 +54,15 @@ export default function LoginPage() {
     setLoading(true)
     
     const supabase = getSupabaseClient()
+    
+    // Use the configured site URL or fallback to the current browser origin
+    const redirectTo = `${process.env.NEXT_PUBLIC_SITE_URL || location.origin}/auth/callback`
+    
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${location.origin}/auth/callback`,
+        emailRedirectTo: redirectTo,
       },
     })
 
