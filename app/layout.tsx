@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthErrorListener } from "@/components/auth-error-listener";
 
 export const metadata: Metadata = {
   title: "ReadCraft",
@@ -50,6 +51,7 @@ export default function RootLayout({
             <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
+          <AuthErrorListener />
           <Toaster />
           <Analytics />
         </ThemeProvider>
