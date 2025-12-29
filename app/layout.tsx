@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "ReadCraft",
@@ -46,9 +47,10 @@ export default function RootLayout({
         />
         <meta name="twitter:image" content="/social-preview.png" />
       </head>
-      <body>
+            <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
+          <Toaster />
           <Analytics />
         </ThemeProvider>
       </body>
