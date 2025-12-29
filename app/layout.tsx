@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthErrorListener } from "@/components/auth-error-listener";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "ReadCraft",
@@ -51,7 +52,9 @@ export default function RootLayout({
             <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
-          <AuthErrorListener />
+          <Suspense fallback={null}>
+            <AuthErrorListener />
+          </Suspense>
           <Toaster />
           <Analytics />
         </ThemeProvider>
