@@ -7,6 +7,14 @@ export async function GET(request: Request) {
   // if "next" is in param, use it as the redirect URL
   const next = searchParams.get('next') ?? '/dashboard'
 
+  // Check for errors returned by Supabase
+  const error = searchParams.get('error')
+  const error_description = searchParams.get('error_description')
+  
+  if (error) {
+     return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${encodeURIComponent(error_description || error)}`)
+  }
+
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
